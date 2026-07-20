@@ -7,10 +7,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from a2wsgi import WSGIMiddleware
 
 DB_PATH = os.getenv("DB_PATH", "schedule.db")
 
 app = FastAPI(title="Web Schedule Planner")
+
+# WSGI アダプター (PythonAnywhere等のWSGIサーバー用)
+wsgi_app = WSGIMiddleware(app)
 
 # 静的ファイルの提供
 os.makedirs("static/js", exist_ok=True)
@@ -24,7 +28,6 @@ def get_db():
 
 
 def init_db():
-    # ディレクトリが存在しない場合は自動作成（Render Disk用パス対応）
     db_dir = os.path.dirname(DB_PATH)
     if db_dir:
         os.makedirs(db_dir, exist_ok=True)
@@ -92,6 +95,10 @@ def startup_event():
     init_db()
 
 
+# テーブルの自動初期化（WSGI起動時用）
+init_db()
+
+
 # ----------------------------------------------------
 # Pydantic Schemas
 # ----------------------------------------------------
@@ -141,7 +148,7 @@ def create_event(payload: EventCreateSchema):
             status_code=400, detail="候補日時を少なくとも1つ入力してください"
         )
 
-    event_id = str(uuid.uuid4())[:8]  # 8文字の簡易UUID
+    event_id = str(uuid.uuid4())[:8]
     created_at = datetime.now().isoformat()
 
     with get_db() as conn:
