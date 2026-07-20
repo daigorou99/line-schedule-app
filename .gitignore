@@ -1,0 +1,19 @@
+# Database
+*.db
+schedule.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Environment variables
+.env
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
